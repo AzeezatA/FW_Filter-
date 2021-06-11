@@ -1,0 +1,63 @@
+{
+  "name": "bslfilter",
+  "label": "BSLPreProcessing Filter",
+  "description": "Flywheel Flter",
+  "version": "0.0.8",
+  "custom": {
+    "gear-builder": {
+      "category": "analysis",
+      "image": "bsl/filter:0.0.1"
+    }
+  },
+  "inputs": {
+    "fMRIprep_bslpp_data": {
+      "description": "zipped output of fMRI prep",
+      "base": "file",
+      "type": {
+        "enum": [
+          "archive"
+        ]
+      }
+    }
+  },
+  "config": {
+    "highpass_cutoff": {
+      "default": 0.1,
+      "description": "Bandpass filter for restings data: Highpass filter cutoff frequency",
+      "type": "number"
+    },
+    "lowpass_cutoff": {
+      "default": 0.01,
+      "description": "Bandpass filter for restings data: Lowpass filter cutoff frequency",
+      "type": "number"
+    },
+    "highpass_cutoff_TASKDATA": {
+      "default": 0.01,
+      "description": "The highpass filter cutoff frequency for task data",
+      "type": "number"
+    }
+  },
+  "environment": {
+    "XAPPLRESDIR": "/opt/mcr/v93/x11/app-defaults",
+    "LD_LIBRARY_PATH": "/opt/mcr/v93/runtime/glnxa64:/opt/mcr/v93/bin/glnxa64:/opt/mcr/v93/sys/os/glnxa64:/opt/mcr/v93/extern/bin/glnxa64",
+    "FSLDIR": "/usr/local/fsl",
+    "FLYWHEEL": "/flywheel/v0",
+    "TERM": "xterm",
+    "SHLVL": "1",
+    "PATH": "/usr/local/fsl/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/abin",
+    "FSLOUTPUTTYPE": "NIFTI_GZ",
+    "FSLMULTIFILEQUIT": "TRUE",
+    "LESSOPEN": "| /usr/bin/lesspipe %s",
+    "_": "/usr/bin/env",
+    "HOME": "/root",
+    "DEBIAN_FRONTEND": "noninteractive"
+
+  },
+  "author": "Flywheel_AzeezatAzeez",
+  "maintainer": "Flywheel <support@flywheel.io> AAzeez<aazeez@stanford.edu>",
+  "license": "Other",
+  "source": "",
+  "url": "",
+  "command": "/flywheel/v0/run 2>&1 | tee /flywheel/v0/output/log.txt"
+
+}
