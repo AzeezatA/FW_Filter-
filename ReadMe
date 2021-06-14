@@ -16,6 +16,13 @@ output: fmriprep_BSLPP_0.0.8.zip
 
 Note: For larger run(many acquisitions files or multiple sessions please use the HighCPU tag=high-cpu)
 
+To Compile the MatlabScript into a standalone:: Too Big to upload on GIT
+This can be done one Sherlock 
+sdev -m 8GB -t 02:00:00
+ml load matlab/R2017b
+matlab
+mcc -mcc FW_filter.m -a filtfilt.m  -a fmri_banpass_filter.m  -a fmri_highpass_filter.m -a /home/groups/nolanw/Matlabtoolbox/spm12
+
 Any Questions::
 A.Azeez aazeez@stanford.edu
 06/14/2021
