@@ -1,6 +1,6 @@
 This is a Flywheel Gear
 
-BSLPreProcessing Filter---(bslfilter v0.0.9)
+BSLPreProcessing Filter---(bslfilter v0.1.3)
 
 Designed to fix the bug in the bslpp filter 
 This gear "patch" can be run after older versions of ppbsltargeting to fix the bug with the filter.
