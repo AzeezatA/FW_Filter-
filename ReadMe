@@ -1,0 +1,20 @@
+This is a Flywheel Gear
+
+BSLPreProcessing Filter---(bslfilter v0.0.9)
+
+Desgined to fix the bug in the bslpp filter 
+This gear"patch" can be run after older versions of ppbsltargeting to fix the bug with the filter.
+Defuts are:
+highpass_cutoff= 0.1
+lowpass_cutoff	0.01 {Bandpass Filter Only applyed to resting state data be sure the acquisitions files are labled 'rest', 'REST', 'resting' etc }
+highpass_cutoff_TASKDATA= 0.01 {Highpass Filter Only applied to task data}
+
+input:fmriprep_BSLPP_0.0.2.zip (from oldversion of ppbsltargeting)
+output: fmriprep_BSLPP_0.0.8.zip
+   - The dir and paths will be the same so you can run ftarget v3.0.9 after or other gears
+
+Note: For larger run(many acquisitions files or multiple sessions please use the HighCPU tag=high-cpu)
+
+Any Questions::
+A.Azeez aazeez@stanford.edu
+06/14/2021
