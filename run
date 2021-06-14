@@ -1,0 +1,203 @@
+#!/bin/bash
+#BSL:Filter
+#A.Azeez aazeez@stanford.edu
+#06/08/2021
+
+
+##############################################################################
+# Configure paths
+
+FLYWHEEL_BASE=/flywheel/v0
+OUTPUT_DIR=/flywheel/v0/output
+WORK_DIR=/flywheel/v0/work
+#INPUT_DIR=$FLYWHEEL_BASE/input/fMRIprep_zip
+CONFIG_FILE=$FLYWHEEL_BASE/config.json
+MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+MCR_DIRECTORY=/opt/mcr/v93
+
+if [[ ! -f $CONFIG_FILE ]]; then
+  CONFIG_FILE=$MANIFEST_FILE
+fi
+ls -l $FLYWHEEL_BASE
+
+##############################################################################
+# Parse configuration
+
+# If the config file does not exist (i.e., local run) then parse the config
+# options and values from the manifest. Those variables can be found in the
+# manifest.json file within the `config` map.
+
+
+function parse_config {
+  # If config.json exists, then we parse config file  Otherwise we parse
+  # manifest.json.
+
+  CONFIG_FILE=$FLYWHEEL_BASE/config.json
+  MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+
+  if [[ -f $CONFIG_FILE ]]; then
+    echo "$(cat $CONFIG_FILE | jq -r '.config.'$1)"
+  else
+    CONFIG_FILE=$MANIFEST_FILE
+    echo "$(cat $MANIFEST_FILE | jq -r '.config.'$1'.default')"
+  fi
+}
+
+##############################################################################
+# Extract and log config values
+echo ""
+HIPASS_CUTOFF="$(parse_config 'highpass_cutoff')"
+echo "Highpass cutoff: $HIPASS_CUTOFF"
+
+LOPASS_CUTOFF="$(parse_config 'lowpass_cutoff')"
+echo "Lowpass cutoff: $LOPASS_CUTOFF"
+
+HIPASS_CUTOFF_TASKDATA="$(parse_config 'highpass_cutoff_TASKDATA')"
+echo "Highpass cutoff TASK: $HIPASS_CUTOFF_TASKDATA"
+
+
+##############################################################################
+# Extract the input file
+
+INPUT_ZIPPED_DATA="$(cat $CONFIG_FILE | jq -r '.inputs.fMRIprep_bslpp_data.location.path')"
+echo "input zipfile: $INPUT_ZIPPED_DATA"
+echo ""
+WORK_ZIP=${WORK_DIR}/fMRIprep_bslpp.zip
+
+if [ ! -d $WORK_DIR ]; then
+  mkdir $WORK_DIR
+fi 
+
+echo "moving $INPUT_ZIPPED_DATA to $WORK_ZIP"
+echo "mv "$INPUT_ZIPPED_DATA" $WORK_ZIP"
+mv "$INPUT_ZIPPED_DATA" $WORK_ZIP
+
+echo "unzipping $WORK_ZIP"
+
+echo "unzip $WORK_ZIP -d $WORK_DIR"
+unzip $WORK_ZIP -d $WORK_DIR
+
+rm -f ${WORK_ZIP}
+
+ cd $WORK_DIR
+ ls -l $WORK_DIR
+
+
+##############################################################################
+# Extract project name
+##############################################################################
+# Extract project name
+INFO_STRING=( `ls -d fmriprep/sub-*/ses-*` )
+for INFO_STRINGS in "${INFO_STRING[@]}";  do
+#ls -d $INFO_STRINGS
+echo "Info Strings: ${INFO_STRINGS[@]}"
+EXAMPLE_STRING=${INFO_STRINGS[0]}
+echo "Example String: $EXAMPLE_STRING"
+SPLIT_EXAMPLE_STR=( ${EXAMPLE_STRING//\// } )
+PROJECT=${SPLIT_EXAMPLE_STR[0]}
+echo "Project: $PROJECT"
+SUBJECT=${SPLIT_EXAMPLE_STR[1]:4}
+echo "Subject: $SUBJECT"
+SESSION=${SPLIT_EXAMPLE_STR[2]:4}
+echo "Session: $SESSION"
+#TASK=${SPLIT_EXAMPLE_STR[5]}
+# echo "Task: $TASK"
+ #TASK1=`echo $TASK|cut -d "_" -f1`
+#echo "Task1: $TASK1"
+
+IP2=(`ls -d fmriprep/sub-*/ses-*/func/PP/task-*`)
+#INFO_STRINGS=( `ls -d fmriprep2/sub-OL1000/ses-baseline/func/PP/task-*`)
+for INFO_STRINGS in "${IP2[@]}";  do
+EXAMPLE_STRING=${INFO_STRINGS[0]}
+#echo "Example String: $EXAMPLE_STRING"
+SPLIT_EXAMPLE_STR=( ${EXAMPLE_STRING//\// } )
+TASK=${SPLIT_EXAMPLE_STR[5]}
+#echo "Task: $TASK"
+TASK1=`echo $TASK|cut -d "_" -f1`
+echo "Task1: $TASK1"
+
+BASE_PATH="fmriprep/sub-${SUBJECT}/ses-${SESSION}/func/PP/$TASK"
+ls ${BASE_PATH}/filt*
+rm -f ${BASE_PATH}/filt*
+ls ${BASE_PATH}/filt*
+
+  done
+  ##############################################################################
+  # Run the main script
+  
+  # Now run the main matlab script
+  echo "$FLYWHEEL_BASE/run_FW_filter.sh $MCR_DIRECTORY /flywheel/v0/work/fmriprep_bslpp.zip/fmriprep  sub-$SUBJECT ses-$SESSION func $HIPASS_CUTOFF $LOPASS_CUTOFF $HIPASS_CUTOFF_TASKDATA "
+  $FLYWHEEL_BASE/FW_filter/run_FW_filter.sh \
+            $MCR_DIRECTORY \
+            /flywheel/v0/work/fmriprep \
+            sub-$SUBJECT \
+            ses-$SESSION \
+            func \
+            $HIPASS_CUTOFF \
+            $LOPASS_CUTOFF \
+            $HIPASS_CUTOFF_TASKDATA
+
+    
+  echo "Finished"
+
+  ##############################################################################
+  # zip only the modified/created files
+IP3=(`ls -d fmriprep/sub-*/ses-*/func/PP/task-*`)
+#INFO_STRINGS=( `ls -d fmriprep2/sub-OL1000/ses-baseline/func/PP/task-*`)
+for INFO_STRINGS in "${IP3[@]}";  do
+EXAMPLE_STRING=${INFO_STRINGS[0]}
+#echo "Example String: $EXAMPLE_STRING"
+SPLIT_EXAMPLE_STR=( ${EXAMPLE_STRING//\// } )
+TASK=${SPLIT_EXAMPLE_STR[5]}
+echo "Task: $TASK"
+TASK1=`echo $TASK|cut -d "_" -f1`
+echo "Task1: $TASK1"
+
+
+  #cd $WORK_DIR/fmriprep
+  #fMRIprep_bslpp.zip
+ #BASE_PATH="/flywheel/v0/output"
+ WORK_DIR=/flywheel/v0/work
+ BASE_PATH="fmriprep/sub-${SUBJECT}/ses-${SESSION}/func/PP/$TASK"
+ echo "BASE_PATH=fmriprep/sub-${SUBJECT}/ses-${SESSION}/func/PP/$TASK"
+
+  # Some debug stuff:
+  
+  echo "List Ouptut"
+  echo ""
+  #ls -l $WORK_DIR/${BASE_PATH}/*
+  #fMRIprep_bslpp.zip/* 
+  echo "zipping output:"
+
+# SPACENAME=(MNI152NLin2009cAsym T1w)
+# SN=(MNI152NLin2009cAsym T1w)
+# for SPACE in "${SN[@]}";  do
+# echo "SPACE: $SPACE"
+
+ cd $WORK_DIR
+# mv "$WORK_DIR/${BASE_PATH}/filtreg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii" ${WORK_DIR}/filtreg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii
+# mv "$WORK_DIR/${BASE_PATH}/filtreg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii" ${WORK_DIR}/filtreg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii
+# mv "$WORK_DIR/${BASE_PATH}/newfilt_reg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii" ${WORK_DIR}/newfilt_reg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii
+# mv "$WORK_DIR/${BASE_PATH}/newfilt_reg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii" ${WORK_DIR}/newfilt_reg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii
+# mv "$WORK_DIR/${BASE_PATH}/reg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii" ${WORK_DIR}/reg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii
+# mv "$WORK_DIR/${BASE_PATH}/reg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii" ${WORK_DIR}/reg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii
+
+  zip -r /flywheel/v0/output/fmriprep_BSLPP_0.0.8.zip \
+    ${BASE_PATH}/* \
+
+
+     # ${WORK_DIR}/filtreg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii \
+     # ${WORK_DIR}/filtreg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii \
+     # ${WORK_DIR}/newfilt_reg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii \
+     # ${WORK_DIR}/newfilt_reg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii \
+     # ${WORK_DIR}/reg_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii \
+     # ${WORK_DIR}/reg_scb_sm_dspk_sk_sub-${SUBJECT}_ses-${SESSION}_${TASK1}_space-${SPACE}_desc-preproc_bold.nii 
+
+#done
+done
+done
+
+ #mv "$WORK_DIR/filter.zip" $OUTPUT_DIR
+
+echo "DONE"
+
