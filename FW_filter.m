@@ -1,5 +1,5 @@
 %FW Filter
-% need spm,fmri_banpass_filter and fmri_highpass_filter
+% need spm,fmri_banpass_filter and fmri_highpass_filter and filtfilt.m 
 function FW_filter(path,subname,sesname,modname,cH,cL,c_task)
 
 path=path;
@@ -30,8 +30,8 @@ fprintf(['regresspath1=' path '/' subname '/' sesname '/' modname '/PP/task*'])
             FP_out_reg=FP_out_REG(n).name
             %FP_out_reg='sm_dspk_sk_sub-AMKTest_ses-baseline_task-Resting1NewHB6scan_space-MNI152NLin2009cAsym_desc-preproc_bold.nii';
             %pathreg='/Users/aazeez/Downloads/testAMK';
-            
-            %y_image=[];y_pair=[]; v_image=[]; v_pair=[]; TimPts=[];y_image_regressed_filtered=[];
+            delete(['filt*']);
+
             clear  v_pair y_pair v_image y_image mean_image  y_mean_image imp_mask  y_image_regressed_filtered  TimPts
 
             v_pair = spm_vol([regresspath '/' FP_out_reg]);
